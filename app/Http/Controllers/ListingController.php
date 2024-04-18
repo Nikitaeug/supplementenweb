@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Listing;
+use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Http\Request;
 use PhpParser\Node\Expr\List_;
 
@@ -11,7 +12,7 @@ class ListingController extends Controller
     public function index()
     {
         return view('listings.index', [
-            'listings' => Listing::latest()->filter(request(['tag']))->get()
+            'listings' => Listing::latest()->filter(request(['tag', 'search']))->get()
         ]);
     }
     public function show(Listing $listing)
@@ -19,5 +20,24 @@ class ListingController extends Controller
         return view('listings.show', [
             'listing' => $listing
         ]);
+    }
+    public function create()
+    {
+        return view('listings.create');
+    }
+
+    public function store(Request $request)
+    {
+        $formFields = $request->validate([
+            'title' => 'required',
+            'company' => ['required', Rule::unique('listings', 'company')],
+            'description' => 'required',
+            'tags' => 'required',
+            'location' => 'required',
+            'website ' => 'required',
+            'email' => 'required'
+        ]);
+
+        return redirect('/')->with('success', 'Listing Created!');
     }
 }
