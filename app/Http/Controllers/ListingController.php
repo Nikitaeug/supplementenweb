@@ -3,16 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\Listing;
-use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Http\Request;
 use PhpParser\Node\Expr\List_;
+use Illuminate\Validation\Rule;
 
 class ListingController extends Controller
 {
     public function index()
     {
         return view('listings.index', [
-            'listings' => Listing::latest()->filter(request(['tag', 'search']))->get()
+            'listings' => Listing::latest()->filter(request(['tag', 'search']))->paginate(4)
         ]);
     }
     public function show(Listing $listing)
@@ -30,14 +30,22 @@ class ListingController extends Controller
     {
         $formFields = $request->validate([
             'title' => 'required',
-            'company' => ['required', Rule::unique('listings', 'company')],
+            'company' => 'required|unique:listings,company', 
             'description' => 'required',
             'tags' => 'required',
             'location' => 'required',
-            'website ' => 'required',
-            'email' => 'required'
+            'website' => 'required',
+            'email' => ['required', 'email']
+
         ]);
 
-        return redirect('/')->with('success', 'Listing Created!');
+        if($request->hasFile('logo')){
+            $formFields['logo'] = $request->file('logo')->store('logos', 'public');
+        }
+
+        Listing::create($formFields);
+
+        return redirect('/')->with('succes', 'Listing Created!');
+        
     }
 }
